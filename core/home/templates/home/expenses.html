@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% load static humanize %} {# Load humanize for number formatting #}
+
+{% block title %}Family Expenses Dashboard{% endblock %}
+
+{% block styles %}
+<style>
+    /* --- Enhanced Styles for a Premium Feel --- */
+    :root {
+        --primary-gradient: linear-gradient(45deg, #4f39fa, #5a78f1);
+        --primary-color: #4f39fa;
+        --primary-hover: #452ff0;
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+        --light-bg: #f7f8fc;
+        --white: #ffffff;
+        --dark-text: #1f2937;
+        --light-text: #6b7280;
+        --border-color: #e5e7eb;
+        --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+        --card-radius: 16px;
+    }
+
+    /* --- General Layout --- */
+    .content-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    /* --- Keyframe Animations --- */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes popIn {
+        0% { opacity: 0; transform: scale(0.95); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* --- Typography --- */
+    h1, h2 {
+        text-align: center;
+        color: var(--dark-text);
+        font-weight: 700;
+    }
+    h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    .page-subtitle {
+        text-align: center;
+        color: var(--light-text);
+        margin-bottom: 2.5rem;
+        font-size: 1.1rem;
+    }
+    h2 {
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* --- Summary Card --- */
+    .summary-card {
+        background: var(--primary-gradient);
+        color: var(--white);
+        padding: 30px;
+        border-radius: var(--card-radius);
+        text-align: center;
+        margin-bottom: 30px;
+        animation: popIn 0.5s ease-out;
+    }
+    .summary-title {
+        font-size: 1.1rem;
+        font-weight: 500;
+        opacity: 0.9;
+        margin-bottom: 10px;
+    }
+    .summary-amount {
+        font-size: 3rem;
+        font-weight: 700;
+    }
+
+    /* --- Card Style --- */
+    .card {
+        background: var(--white);
+        padding: 30px;
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+        margin-bottom: 30px;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    /* --- Messages/Alerts --- */
+    .message {
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        border-left: 5px solid;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .success { background-color: #f0fdf4; color: #14532d; border-color: var(--success-color); }
+    .error { background-color: #fef2f2; color: #991b1b; border-color: var(--danger-color); }
+
+    /* --- Table Styling --- */
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 16px 20px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    thead th {
+        background-color: var(--light-bg);
+        color: var(--light-text);
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    tbody tr { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
+    tbody tr:nth-child(even) { background-color: #fcfcfd; }
+    tbody tr:last-child td { border-bottom: none; }
+    td:first-child { font-weight: 600; color: var(--dark-text); }
+
+    /* --- Empty State --- */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    .empty-state svg {
+        width: 60px;
+        height: 60px;
+        color: var(--border-color);
+        margin-bottom: 20px;
+    }
+    .empty-state p {
+        color: var(--light-text);
+        font-size: 1.1rem;
+    }
+
+    /* --- Form Styling with Icons --- */
+    form { display: grid; gap: 25px; }
+    .form-group { position: relative; }
+    label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        color: var(--dark-text);
+        display: block;
+    }
+    .input-wrapper { position: relative; }
+    .input-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--light-text);
+        pointer-events: none;
+    }
+    input[type="text"], input[type="number"], input[type="date"] {
+        width: 100%;
+        padding: 12px 15px 12px 45px; /* Left padding for icon */
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        font-size: 1rem;
+        font-family: 'Poppins', sans-serif;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(79, 57, 250, 0.15);
+    }
+    button[type="submit"] {
+        width: 100%;
+        padding: 15px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--white);
+        background: var(--primary-gradient);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+    }
+    button[type="submit"]:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 20px rgba(79, 57, 250, 0.3);
+    }
+    button[type="submit"]:disabled {
+        background: var(--secondary-color);
+        cursor: not-allowed;
+    }
+    .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: var(--white);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="content-container">
+    <h1>Expenses Dashboard</h1>
+    <p class="page-subtitle">A central hub for tracking your family's spending.</p>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="message {{ message.tags }}">
+            {# Simple icon for messages #}
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle-fill" viewBox="0 0 16 16">
+                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+            </svg>
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Total Expenses Summary -->
+    <div class="summary-card">
+        <div class="summary-title">Total Expenses This Month</div>
+        <div class="summary-amount">Rs. {{ total_expenses|intcomma }}</div>
+    </div>
+
+    <!-- Table of Expenses -->
+    <div class="card">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Expense</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Added By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr style="animation-delay: {{ forloop.counter }}ms">
+                        <td>{{ expense.expense_name }}</td>
+                        <td>Rs. {{ expense.expense_amount|intcomma }}</td>
+                        <td>{{ expense.expense_date|date:"d M, Y" }}</td>
+                        <td>{{ expense.expenses_by.username }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 00-.12-1.03l-2.268-9.64a3.375 3.375 0 00-3.285-2.602H7.923a3.375 3.375 0 00-3.285 2.602l-2.268 9.64a4.5 4.5 0 00-.12 1.03v.228m19.5 0a3 3 0 01-3 3H5.25a3 3 0 01-3-3m19.5 0a3 3 0 00-3-3H5.25a3 3 0 00-3 3m16.5 0h.008v.008h-.008v-.008z" />
+                                </svg>
+                                <p>Your expense list is empty.<br>Add your first expense below to get started!</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Expense Form -->
+    <div class="card">
+        <h2>Add a New Expense</h2>
+        <form id="expense-form" method="POST" action="{% url 'create_expenses' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="expense_name">Expense Name</label>
+                <div class="input-wrapper">
+                    <span class="input-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM7 6.5C7 7.328 6.552 8 6 8s-1-.672-1-1.5S5.448 5 6 5s1 .672 1 1.5zm3 0c0 .828-.448 1.5-1 1.5s-1-.672-1-1.5S8.448 5 9 5s1 .672 1 1.5z"/></svg></span>
+                    <input type="text" id="expense_name" name="expense_name" placeholder="e.g., Groceries" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="expense_amount">Amount (Rs.)</label>
+                <div class="input-wrapper">
+                    <span class="input-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2 2.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5zm2 4a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-1 4a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/></svg></span>
+                    <input type="number" id="expense_amount" name="expense_amount" placeholder="e.g., 2500" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="expense_date">Date</label>
+                <div class="input-wrapper">
+                    <span class="input-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/></svg></span>
+                    <input type="date" id="expense_date" name="expense_date" required>
+                </div>
+            </div>
+
+            <button type="submit" id="submit-button">
+                <span id="button-text">Add Expense</span>
+                <div id="button-spinner" class="spinner" style="display: none;"></div>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const expenseForm = document.getElementById('expense-form');
+    const submitButton = document.getElementById('submit-button');
+    const buttonText = document.getElementById('button-text');
+    const buttonSpinner = document.getElementById('button-spinner');
+
+    expenseForm.addEventListener('submit', function() {
+        // Disable button to prevent multiple submissions
+        submitButton.disabled = true;
+        
+        // Change button content to show loading state
+        buttonText.textContent = 'Adding...';
+        buttonSpinner.style.display = 'block';
+    });
+</script>
+{% endblock %}

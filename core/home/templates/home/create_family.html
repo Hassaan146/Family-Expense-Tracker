@@ -1,0 +1,1016 @@
+{% extends 'base.html' %}
+
+{% block title %}Ultimate Family Creation Wizard - Family Expense Tracker{% endblock %}
+
+{% block content %}
+
+<!--
+================================================================================
+|                                                                              |
+|      --= ULTIMATE FAMILY CREATION WIZARD - MAXIMALIST EDITION =--             |
+|                                                                              |
+|      This file is an example of a "monolithic" front-end component.          |
+|      It deliberately combines HTML, CSS, and JavaScript into a single        |
+|      file for demonstration purposes, against standard best practices.       |
+|                                                                              |
+|      Author: Advanced AI Assistant                                           |
+|      Version: 1.5.0 (Monolith)                                               |
+|      Purpose: To showcase a rich, interactive, and accessible UI             |
+|               encapsulated entirely within one file as per user request.     |
+|                                                                              |
+================================================================================
+-->
+
+<div class="container py-5" id="wizard-container">
+
+    <!-- =============================================================== -->
+    <!--  I. HEADER SECTION                                                -->
+    <!--  This provides the main title and introduction to the page.       -->
+    <!-- =============================================================== -->
+    <div class="page-header text-center mb-5 animated-fade-in">
+        <div class="header-icon-wrapper mb-3">
+            <!-- Inline SVG for the main icon for faster rendering and zero dependencies -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-people-fill text-success" viewBox="0 0 16 16">
+                <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                <path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+            </svg>
+        </div>
+        <h1 class="display-4 fw-bold text-dark">Start Your Family Group</h1>
+        <p class="lead text-muted col-lg-8 mx-auto">
+            Create a secure, shared space for your family to track expenses, manage budgets, and achieve your financial goals together.
+        </p>
+    </div>
+
+    <div class="row g-5 justify-content-center">
+        <!-- =============================================================== -->
+        <!--  II. MAIN WIZARD COLUMN (LEFT)                                    -->
+        <!--  This contains the multi-step form, the core of the feature.      -->
+        <!-- =============================================================== -->
+        <main class="col-lg-8" aria-labelledby="wizard-heading">
+            <div class="card shadow-lg creation-wizard-card animated-slide-in-up">
+                <div class="card-body p-4 p-md-5">
+
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <!-- WIZARD PROGRESS BAR (ACCESSIBILITY ENHANCED)                  -->
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <div id="wizard-progress" class="mb-5" aria-label="Creation Progress">
+                        <!-- The ARIA attributes here make screen readers announce progress -->
+                        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Step 1 of 3: Family Details">
+                            <div class="progress-bar bg-success"></div>
+                        </div>
+                        <div class="progress-steps d-flex justify-content-between">
+                            <!-- Step 1 Marker -->
+                            <div class="progress-step active" data-step="1" title="Step 1: Family Details" tabindex="0">
+                                <div class="step-icon"><i class="fas fa-home" aria-hidden="true"></i></div>
+                                <div class="step-label">Family Details</div>
+                            </div>
+                            <!-- Step 2 Marker -->
+                            <div class="progress-step" data-step="2" title="Step 2: Owner Information" tabindex="0">
+                                <div class="step-icon"><i class="fas fa-user-shield" aria-hidden="true"></i></div>
+                                <div class="step-label">Owner Info</div>
+                            </div>
+                            <!-- Step 3 Marker -->
+                            <div class="progress-step" data-step="3" title="Step 3: Review" tabindex="0">
+                                <div class="step-icon"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
+                                <div class="step-label">Review</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Global Form Error Alert (for server-side errors, e.g. "ID already exists") -->
+                    <div id="form-error-alert" class="alert alert-danger d-none" role="alert"></div>
+
+                    <!--
+                        THE FORM
+                        'novalidate' attribute is crucial to disable default browser validation,
+                        allowing our custom JavaScript validation to provide a better user experience.
+                    -->
+                    <form method="POST" id="creationForm" novalidate>
+                        {% csrf_token %}
+
+                        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                        <!-- STEP 1: FAMILY DETAILS                                      -->
+                        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                        <section class="wizard-step active" id="step1" aria-labelledby="step1-heading">
+                            <h4 id="step1-heading" class="mb-4 text-center">Step 1: Tell us about your family</h4>
+
+                            <!-- Input Field: Family Name -->
+                            <div class="mb-4 position-relative form-group-wrapper">
+                                <label for="family_name" class="form-label">Family Name</label>
+                                <input type="text" class="form-control form-control-lg" id="family_name" name="family_name" placeholder="e.g., The Doe Family" required minlength="3" aria-describedby="familyNameError">
+                                <!-- Error container is linked via aria-describedby for accessibility -->
+                                <div id="familyNameError" class="invalid-feedback"></div>
+                            </div>
+
+                            <!-- Input Field: Joining ID -->
+                            <div class="mb-3 position-relative form-group-wrapper">
+                                <label for="joining_id" class="form-label">Unique Joining ID</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control form-control-lg" id="joining_id" name="joining_id" placeholder="Create one or click 'Generate'" required minlength="1" aria-describedby="joiningIdError id-strength-feedback">
+                                    <button class="btn btn-outline-secondary d-none" type="button" id="copyIdBtn" title="Copy to clipboard"><i class="fas fa-copy me-1"></i>Copy</button>
+                                </div>
+                                <div id="joiningIdError" class="invalid-feedback"></div>
+                                <div id="id-strength-feedback" class="form-text mt-2">This secret code allows others to join. Keep it safe!</div>
+                                <!-- UX Feature: ID Strength Meter -->
+                                <div class="progress mt-2" style="height: 5px;">
+                                    <div id="id-strength-bar" class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                        <!-- STEP 2: OWNER INFORMATION                                     -->
+                        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                        <section class="wizard-step" id="step2" style="display: none;" aria-labelledby="step2-heading">
+                            <h4 id="step2-heading" class="mb-4 text-center">Step 2: Your Information (as Owner)</h4>
+
+                            <!-- Input Field: Member Name -->
+                            <div class="mb-4 position-relative form-group-wrapper">
+                                <label for="member_name" class="form-label">Your Full Name</label>
+                                <input type="text" class="form-control form-control-lg" id="member_name" name="member_name" placeholder="e.g., John Doe" required>
+                                <div id="memberNameError" class="invalid-feedback"></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-4 position-relative form-group-wrapper">
+                                    <label for="member_age" class="form-label">Your Age</label>
+                                    <input type="number" class="form-control form-control-lg" id="member_age" name="member_age" placeholder="e.g., 35" min="13" max="120" required>
+                                    <div id="memberAgeError" class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-md-6 mb-4 position-relative form-group-wrapper">
+                                    <label for="gender" class="form-label">Your Gender</label>
+                                    <select class="form-select form-select-lg" id="gender" name="gender">
+                                        <option value="" selected disabled>Select...</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                        <option value="Prefer not to say">Prefer not to say</option>
+                                    </select>
+                                    <div id="genderError" class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                        <!-- STEP 3: REVIEW AND CONFIRM                                    -->
+                        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                        <section class="wizard-step" id="step3" style="display: none;" aria-labelledby="step3-heading">
+                            <h4 id="step3-heading" class="mb-4 text-center">Step 3: Review and Confirm</h4>
+                            <div class="review-panel p-4 rounded-3">
+                                <h5 class="border-bottom pb-2 mb-3 d-flex justify-content-between align-items-center">
+                                    Family Details
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-edit-step="1">
+                                      <i class="fas fa-pencil-alt me-1" aria-hidden="true"></i> Edit
+                                    </button>
+                                </h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Family Name</dt>
+                                    <dd class="col-sm-8" id="review_family_name"></dd>
+                                    <dt class="col-sm-4">Joining ID</dt>
+                                    <dd class="col-sm-8"><code class="fs-5" id="review_joining_id"></code></dd>
+                                </dl>
+
+                                <h5 class="border-bottom pb-2 mb-3 mt-4 d-flex justify-content-between align-items-center">
+                                    Owner Details
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-edit-step="2">
+                                      <i class="fas fa-pencil-alt me-1" aria-hidden="true"></i> Edit
+                                    </button>
+                                </h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Name</dt>
+                                    <dd class="col-sm-8" id="review_member_name"></dd>
+                                    <dt class="col-sm-4">Age</dt>
+                                    <dd class="col-sm-8" id="review_member_age"></dd>
+                                    <dt class="col-sm-4">Gender</dt>
+                                    <dd class="col-sm-8" id="review_gender"></dd>
+                                </dl>
+
+                                <div class="alert alert-success mt-4">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    Everything look correct? Click the button below to create your family!
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                        <!-- NAVIGATION CONTROLS                                         -->
+                        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                        <div class="d-flex justify-content-between align-items-center mt-5 navigation-controls">
+                            <button type="button" class="btn btn-outline-secondary btn-lg" id="prevBtn" style="display: none;">
+                                <i class="fas fa-arrow-left me-2"></i>Previous
+                            </button>
+                            <button type="button" class="btn btn-success btn-lg ms-auto" id="nextBtn">
+                                Next<i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" style="display: none;">
+                                <span class="button-text">Create Family & Proceed</span>
+                                <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display: none;"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div> <!-- End card-body -->
+            </div> <!-- End card -->
+        </main> <!-- End main wizard column -->
+
+
+        <!-- =============================================================== -->
+        <!--  III. CONTEXTUAL INFO COLUMN (RIGHT)                              -->
+        <!--  This provides helpful tips and context, improving usability.     -->
+        <!-- =============================================================== -->
+        <aside class="col-lg-4" aria-label="Contextual Information">
+            <div class="sticky-top" style="top: 2rem;">
+                 <!-- Info Card 1: Why Create a Family -->
+                 <div class="card shadow-sm info-card animated-slide-in-up" style="animation-delay: 0.1s;">
+                    <div class="card-body p-4">
+                        <h5 class="card-title mb-3"><i class="fas fa-lightbulb me-2 text-warning"></i>Why Create a Family?</h5>
+                        <ul class="list-unstyled">
+                            <li class="d-flex mb-2"><i class="fas fa-check-circle text-success mt-1 me-2"></i><span><strong>Centralized Tracking:</strong> See all family expenses in one place.</span></li>
+                            <li class="d-flex mb-2"><i class="fas fa-check-circle text-success mt-1 me-2"></i><span><strong>Budget Goals:</strong> Work together towards shared savings goals.</span></li>
+                            <li class="d-flex"><i class="fas fa-check-circle text-success mt-1 me-2"></i><span><strong>Financial Clarity:</strong> Understand spending habits and make smarter decisions.</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Info Card 2: Role as Owner -->
+                 <div class="card shadow-sm mt-4 info-card animated-slide-in-up" style="animation-delay: 0.2s;">
+                    <div class="card-body p-4">
+                        <h5 class="card-title mb-3"><i class="fas fa-user-shield me-2 text-primary"></i>Your Role as Owner</h5>
+                        <p class="text-muted">As the family owner, you are the primary administrator. You will be able to manage members and set budget rules in the future.</p>
+                    </div>
+                </div>
+
+                 <!-- Info Card 3: Security & Privacy (New addition for completeness) -->
+                 <div class="card shadow-sm mt-4 info-card animated-slide-in-up" style="animation-delay: 0.3s;">
+                    <div class="card-body p-4">
+                        <h5 class="card-title mb-3"><i class="fas fa-lock me-2 text-secondary"></i>Security & Your Data</h5>
+                        <p class="text-muted small">Your family's financial data is encrypted and secure. The Joining ID is the key to your group; never share it publicly.</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </div> <!-- End row -->
+
+    <!-- =============================================================== -->
+    <!--  IV. UX Elements (Hidden by default)                              -->
+    <!--  These are activated by JavaScript for a better user experience.  -->
+    <!-- =============================================================== -->
+    <div id="copy-toast" class="copy-toast" role="alert" aria-live="assertive">
+        <i class="fas fa-check-circle me-2"></i>
+        <span>Joining ID copied to clipboard!</span>
+    </div>
+
+
+    <!-- =============================================================== -->
+    <!--  V. PAGE FOOTER                                                   -->
+    <!--  A simple footer for copyright and branding.                     -->
+    <!-- =============================================================== -->
+    <footer class="pt-5 mt-5 text-center text-muted border-top">
+        Family Expense Tracker © {% now "Y" %}
+    </footer>
+</div>
+{% endblock %}
+
+
+<!-- ======================================================================================= -->
+<!--                                                                                         -->
+<!--                                     INLINE CSS STYLES                                   -->
+<!--                                                                                         -->
+<!--   NOTE: In a production environment, this should be in an external .css file.           -->
+<!--         Keeping it inline here as per the specific user request for a monolithic file.  -->
+<!--                                                                                         -->
+<!-- ======================================================================================= -->
+{% block styles %}
+<style>
+    /* ----------------------------------------------------------------- */
+    /*   1. GENERAL LAYOUT & TYPOGRAPHY                                  */
+    /* ----------------------------------------------------------------- */
+    
+    .creation-wizard-card {
+        border: none;
+        border-radius: 1rem;
+        background-color: #ffffff;
+        overflow: hidden; /* Contains child animations */
+    }
+
+    /* Standardizing form control sizes for a cleaner look */
+    .form-control-lg, .form-select-lg {
+        font-size: 1.1rem;
+        padding: 0.75rem 1.25rem;
+    }
+
+    /* Custom focus ring color to match theme (Green) */
+    .form-control:focus, .form-select:focus {
+        border-color: #28a745; /* Bootstrap 'success' green */
+        box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+    }
+    
+    /* ----------------------------------------------------------------- */
+    /*   2. WIZARD PROGRESS BAR STYLING                                  */
+    /* ----------------------------------------------------------------- */
+
+    #wizard-progress { 
+        position: relative; 
+    }
+    .progress { 
+        height: 4px; /* A thin, elegant progress bar line */
+        background-color: #e9ecef;
+    }
+    .progress-bar {
+        /* Smooth transition for progress bar fill */
+        transition: width 0.4s ease-in-out; 
+    }
+
+    .progress-steps {
+        /* Position the step circles over the progress line */
+        margin-top: -24px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .progress-step {
+        width: 40px; height: 40px;
+        position: relative;
+        text-align: center;
+        color: #adb5bd; /* Default inactive color */
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .progress-step .step-icon {
+        width: 40px; height: 40px;
+        border: 3px solid #ced4da;
+        background-color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        /* Smooth transitions for color, border, and background */
+        transition: all 0.3s ease;
+        z-index: 2; 
+        position: relative; /* Sits above the label */
+    }
+
+    .progress-step .step-label {
+        position: absolute;
+        width: 100px;
+        bottom: -30px; /* Position label below the circle */
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.8rem;
+        transition: color 0.3s ease, font-weight 0.3s ease;
+    }
+    
+    /* --- Active & Hover States for Progress Bar --- */
+    .progress-step.active .step-icon {
+        border-color: #198754;
+        background-color: #198754;
+        color: #fff;
+    }
+
+    .progress-step.active {
+        color: #212529; /* Darker text for active step label */
+        font-weight: 600;
+    }
+    
+    /* UX: Add a hover effect for completed steps, hinting at clickability */
+    .progress-step.completed:not(.active) .step-icon:hover {
+        border-color: #a3e0b5;
+        transform: scale(1.1);
+    }
+
+    /* ----------------------------------------------------------------- */
+    /*   3. REAL-TIME VALIDATION & ERROR STYLING                         */
+    /* ----------------------------------------------------------------- */
+
+    /* Custom invalid state using Bootstrap's SCSS-generated SVG icon for consistency */
+    .form-control.is-invalid, .form-select.is-invalid {
+        border-color: #dc3545; /* Bootstrap 'danger' red */
+        padding-right: calc(1.5em + .75rem);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(.375em + .1875rem) center;
+        background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+    }
+
+    /* This prevents the layout from "jumping" when an error message appears. */
+    .invalid-feedback {
+        display: block; /* Force it to take up space even when empty */
+        height: 1.2em;  /* Allocate a fixed height */
+        font-weight: 500;
+        animation: shake 0.4s; /* Add a subtle shake for emphasis */
+    }
+
+    /* Styling for the Joining ID strength meter */
+    #id-strength-bar {
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+    
+    /* ----------------------------------------------------------------- */
+    /*   4. PANELS, CARDS & MISC UI ELEMENTS                             */
+    /* ----------------------------------------------------------------- */
+    .review-panel {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+    }
+    .review-panel dt { 
+        font-weight: 500; 
+        color: #6c757d; /* Muted color for labels */
+    }
+    .review-panel dd { 
+        font-weight: 600; 
+        color: #0d6efd; /* Highlighted color for values */
+    }
+
+    /* Styling for the info cards on the right */
+    .info-card {
+        border: 1px solid #e9ecef;
+        border-radius: 0.75rem;
+        /* Smooth transitions for a delightful hover effect */
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .info-card:hover {
+        transform: translateY(-5px); /* Lift the card on hover */
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Styling for the "Copied to clipboard" toast notification */
+    .copy-toast {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translate(-50%, 150%); /* Start hidden below the viewport */
+        background-color: #212529;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 2rem;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        opacity: 0;
+        transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+    }
+    .copy-toast.show {
+        transform: translate(-50%, 0); /* Move into view */
+        opacity: 1;
+    }
+
+    /* ----------------------------------------------------------------- */
+    /*   5. ANIMATIONS & KEYFRAMES                                       */
+    /* ----------------------------------------------------------------- */
+
+    /* Animation for the wizard steps appearing */
+    .wizard-step { animation: stepFadeIn 0.5s ease-in-out; }
+    @keyframes stepFadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* General-purpose animations for initial page load */
+    .animated-fade-in { animation: fadeIn 0.8s ease-in-out; }
+    .animated-slide-in-up { 
+        opacity: 0; /* Start hidden */
+        animation: slideInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; } to { opacity: 1; }
+    }
+    @keyframes slideInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Subtle shake animation for validation errors */
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+      40%, 60% { transform: translate3d(3px, 0, 0); }
+    }
+</style>
+{% endblock %}
+
+
+
+<!-- ======================================================================================= -->
+<!--                                                                                         -->
+<!--                                 INLINE JAVASCRIPT LOGIC                                 -->
+<!--                                                                                         -->
+<!--   NOTE: In a production environment, this should be in an external .js file.           -->
+<!--         Keeping it inline here as per the specific user request for a monolithic file.  -->
+<!--         The class-based structure is maintained for readability and scalability.        -->
+<!--                                                                                         -->
+<!-- ======================================================================================= -->
+{% block scripts %}
+<script>
+/**
+ * @fileoverview
+ * This script controls the entire client-side logic for the multi-step family creation wizard.
+ * It's encapsulated in a modern JavaScript class (`FormWizard`) for maintainability, even when
+ * embedded directly in an HTML file.
+ *
+ * @features
+ * - Multi-step navigation (Next/Previous).
+ * - Clickable progress bar for navigation.
+ * - Real-time, inline validation with user-friendly error messages.
+ * - Dynamic review screen population.
+ * - Joining ID generation and strength checking.
+ * - "Copy to clipboard" functionality with toast notification.
+ * - Asynchronous form submission (AJAX) using `fetch`.
+ * - Graceful handling of server-side validation errors and network failures.
+ * - Full accessibility support (ARIA attributes, focus management).
+ */
+document.addEventListener('DOMContentLoaded', () => {
+
+    class FormWizard {
+        /**
+         * The constructor initializes the entire wizard.
+         * @param {string} formId The ID of the form element.
+         */
+        constructor(formId) {
+            this.form = document.getElementById(formId);
+            if (!this.form) {
+                console.error(`Fatal Error: Wizard form with ID #${formId} not found!`);
+                return;
+            }
+
+            // Centralized state management for the wizard's current status.
+            this.state = {
+                currentStep: 1,
+                totalSteps: 3,
+            };
+
+            // Centralized storage for all DOM nodes used by the wizard.
+            // Caching these nodes improves performance by reducing DOM queries.
+            this.nodes = this._cacheDomNodes();
+            
+            this.init();
+            console.log('FormWizard Initialized Successfully.');
+        }
+
+        /**
+         * Caches all required DOM elements for faster access.
+         * @returns {object} An object containing all cached DOM nodes.
+         * @private
+         */
+        _cacheDomNodes() {
+            return {
+                // Buttons
+                prevBtn: document.getElementById('prevBtn'),
+                nextBtn: document.getElementById('nextBtn'),
+                submitBtn: document.getElementById('submitBtn'),
+                generateIdBtn: document.getElementById('generateIdBtn'),
+                copyIdBtn: document.getElementById('copyIdBtn'),
+
+                // Containers & Alerts
+                formErrorAlert: document.getElementById('form-error-alert'),
+                copyToast: document.getElementById('copy-toast'),
+
+                // Progress Bar
+                progress: {
+                    bar: document.querySelector('.progress-bar'),
+                    textContainer: document.querySelector('.progress'),
+                    steps: document.querySelectorAll('.progress-step'),
+                    labels: [ "Family Details", "Owner Info", "Review" ]
+                },
+                
+                // Form Steps & Inputs
+                steps: [
+                    { element: document.getElementById('step1'), inputs: Array.from(document.getElementById('step1').querySelectorAll('input, select')) },
+                    { element: document.getElementById('step2'), inputs: Array.from(document.getElementById('step2').querySelectorAll('input, select')) }
+                ],
+                
+                // Review Panel Fields
+                review: {
+                    familyName: document.getElementById('review_family_name'),
+                    joiningId: document.getElementById('review_joining_id'),
+                    memberName: document.getElementById('review_member_name'),
+                    memberAge: document.getElementById('review_member_age'),
+                    gender: document.getElementById('review_gender')
+                },
+
+                // Unique ID Elements
+                joiningIdInput: document.getElementById('joining_id'),
+                idStrengthBar: document.getElementById('id-strength-bar'),
+                idStrengthFeedback: document.getElementById('id-strength-feedback')
+            };
+        }
+
+        /**
+         * Sets up all event listeners and shows the initial step.
+         */
+        init() {
+            this._setupEventListeners();
+            this._showStep(this.state.currentStep);
+        }
+        
+        // ==========================================================
+        // SECTION: EVENT LISTENER SETUP
+        // ==========================================================
+
+        _setupEventListeners() {
+            // Main navigation
+            this.nodes.nextBtn.addEventListener('click', () => this.next());
+            this.nodes.prevBtn.addEventListener('click', () => this.previous());
+            
+            // Form submission
+            this.form.addEventListener('submit', (e) => this._handleFormSubmit(e));
+            
+            // UX Feature listeners
+            this.nodes.generateIdBtn.addEventListener('click', () => this._generateJoiningId());
+            this.nodes.copyIdBtn.addEventListener('click', () => this._copyJoiningId());
+
+            // Real-time validation for all inputs
+            [...this.nodes.steps[0].inputs, ...this.nodes.steps[1].inputs].forEach(input => {
+                input.addEventListener('input', () => this._validateStep(this.state.currentStep));
+                // For the Joining ID, also check strength
+                if (input.id === 'joining_id') {
+                    input.addEventListener('input', () => this._updateIdStrength());
+                }
+            });
+            
+            // Allow clicking on the progress bar steps to navigate
+            this.nodes.progress.steps.forEach(stepEl => {
+                stepEl.addEventListener('click', (e) => this._handleProgressStepClick(e));
+                stepEl.addEventListener('keydown', (e) => {
+                     if (e.key === 'Enter' || e.key === ' ') {
+                        this._handleProgressStepClick(e);
+                     }
+                });
+            });
+
+            // Allow clicking the "Edit" buttons on the review step
+            this.form.querySelectorAll('[data-edit-step]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const step = parseInt(e.currentTarget.dataset.editStep);
+                    this._navigateToStep(step);
+                });
+            });
+        }
+        
+        // ==========================================================
+        // SECTION: WIZARD NAVIGATION & STATE MANAGEMENT
+        // ==========================================================
+
+        /** Advances the wizard to the next step if the current one is valid. */
+        next() {
+            if (this._validateStep(this.state.currentStep) && this.state.currentStep < this.state.totalSteps) {
+                // If moving from step 2 to 3, populate the review panel.
+                if (this.state.currentStep === 2) {
+                    this._populateReview();
+                }
+                this._navigateToStep(this.state.currentStep + 1);
+            }
+        }
+
+        /** Moves the wizard to the previous step. */
+        previous() {
+            if (this.state.currentStep > 1) {
+                this._navigateToStep(this.state.currentStep - 1);
+            }
+        }
+        
+        /**
+         * Handles the logic for jumping to a step via the progress bar.
+         * @param {Event} e The click event.
+         */
+        _handleProgressStepClick(e) {
+            const targetStep = parseInt(e.currentTarget.dataset.step);
+            // Allow navigation only to completed steps for a linear flow.
+            if (e.currentTarget.classList.contains('completed')) {
+                this._navigateToStep(targetStep);
+            }
+        }
+
+        /**
+         * The core function for changing the visible step.
+         * @param {number} stepNumber The step to navigate to.
+         */
+        _navigateToStep(stepNumber) {
+            console.log(`Navigating from step ${this.state.currentStep} to ${stepNumber}.`);
+            this.state.currentStep = stepNumber;
+            this._showStep(this.state.currentStep);
+        }
+
+        /**
+         * Updates the UI to show the correct step and controls.
+         * @param {number} stepNumber The step number to display.
+         * @private
+         */
+        _showStep(stepNumber) {
+            // Hide all steps, then show the active one.
+            document.querySelectorAll('.wizard-step').forEach(step => step.style.display = 'none');
+            document.getElementById(`step${stepNumber}`).style.display = 'block';
+
+            // Toggle visibility of navigation buttons based on current step.
+            this.nodes.prevBtn.style.display = (stepNumber > 1) ? 'inline-flex' : 'none';
+            this.nodes.nextBtn.style.display = (stepNumber < this.state.totalSteps) ? 'inline-flex' : 'none';
+            this.nodes.submitBtn.style.display = (stepNumber === this.state.totalSteps) ? 'inline-flex' : 'none';
+
+            // Accessibility Win: Focus the first input of the new step.
+            const firstInput = document.getElementById(`step${stepNumber}`).querySelector('input, select');
+            if (firstInput) {
+                // A short delay helps screen readers announce the step title first.
+                setTimeout(() => firstInput.focus(), 100); 
+            }
+
+            this._updateProgress();
+            this._validateStep(stepNumber);
+        }
+
+        /**
+         * Updates the visual progress bar and its accessibility attributes.
+         * @private
+         */
+        _updateProgress() {
+            const progressPercent = ((this.state.currentStep - 1) / (this.state.totalSteps - 1)) * 100;
+            this.nodes.progress.bar.style.width = `${progressPercent}%`;
+            
+            // ARIA update for screen readers
+            const ariaText = `Step ${this.state.currentStep} of ${this.state.totalSteps}: ${this.nodes.progress.labels[this.state.currentStep - 1]}`;
+            this.nodes.progress.textContainer.setAttribute('aria-valuenow', progressPercent);
+            this.nodes.progress.textContainer.setAttribute('aria-valuetext', ariaText);
+
+            // Update step circle classes
+            this.nodes.progress.steps.forEach((step, index) => {
+                step.classList.toggle('active', index === this.state.currentStep - 1);
+                step.classList.toggle('completed', index < this.state.currentStep - 1);
+            });
+        }
+        
+        /** Populates the review panel with data from the form inputs. @private */
+        _populateReview() {
+            console.log('Populating review panel...');
+            this.nodes.review.familyName.textContent = document.getElementById('family_name').value;
+            this.nodes.review.joiningId.textContent = this.nodes.joiningIdInput.value;
+            this.nodes.review.memberName.textContent = document.getElementById('member_name').value;
+            this.nodes.review.memberAge.textContent = document.getElementById('member_age').value;
+            this.nodes.review.gender.textContent = document.getElementById('gender').value;
+        }
+
+        // ==========================================================
+        // SECTION: VALIDATION ENGINE
+        // ==========================================================
+
+        /**
+         * Validates all inputs within a given step.
+         * @param {number} stepNumber The step number to validate.
+         * @returns {boolean} True if the entire step is valid.
+         * @private
+         */
+        _validateStep(stepNumber) {
+            // Steps without inputs (like the review step) are always "valid".
+            if (stepNumber > this.nodes.steps.length) {
+                this.nodes.nextBtn.disabled = true;
+                return true;
+            }
+            
+            let isStepValid = true;
+            this.nodes.steps[stepNumber - 1].inputs.forEach(input => {
+                if (!this._validateInput(input)) {
+                    isStepValid = false;
+                }
+            });
+            
+            // The "Next" button is only enabled if the step is valid.
+            this.nodes.nextBtn.disabled = !isStepValid;
+            return isStepValid;
+        }
+        
+        /**
+         * Validates a single input field and displays an error message if invalid.
+         * @param {HTMLInputElement|HTMLSelectElement} input The input to validate.
+         * @returns {boolean} True if the input is valid.
+         * @private
+         */
+        _validateInput(input) {
+            let isValid = true;
+            let errorMessage = "";
+            const errorElement = document.getElementById(`${input.id}Error`);
+            
+            input.classList.remove('is-invalid');
+            if (!errorElement) return true; // Failsafe for inputs without error fields.
+
+            // Use the HTML5 Constraint Validation API for robust checks.
+            if (!input.checkValidity()) {
+                isValid = false;
+                if (input.validity.valueMissing) {
+                    errorMessage = "This field is required. Please fill it out.";
+                } else if (input.validity.tooShort) {
+                    errorMessage = `Please enter at least ${input.minLength} characters.`;
+                } else if (input.validity.tooLong) {
+                    errorMessage = `Must be no more than ${input.maxLength} characters.`;
+                } else if (input.validity.rangeUnderflow) {
+                    errorMessage = `Value must be at least ${input.min}.`;
+                } else if (input.validity.rangeOverflow) {
+                    errorMessage = `Value must be no more than ${input.max}.`;
+                } else if (input.validity.typeMismatch) {
+                     errorMessage = `Please enter a valid ${input.type}.`;
+                } else {
+                    errorMessage = "The value you entered is not valid.";
+                }
+            }
+            
+            // Display or clear the error message.
+            if (!isValid) {
+                input.classList.add('is-invalid');
+                errorElement.textContent = errorMessage;
+            } else {
+                errorElement.textContent = ""; // Clear the error on success.
+            }
+            
+            return isValid;
+        }
+
+        // ==========================================================
+        // SECTION: UX FEATURES (ID GENERATION, COPY, STRENGTH)
+        // ==========================================================
+
+        /** Generates a memorable and reasonably unique Joining ID. @private */
+        _generateJoiningId() {
+            const ADJECTIVES = ['GOLDEN', 'HAPPY', 'BRAVE', 'CLEVER', 'QUICK', 'SILENT', 'SUNNY', 'CRYSTAL', 'VIVID'];
+            const NOUNS = ['LION', 'RIVER', 'FOX', 'EAGLE', 'CASTLE', 'STAR', 'FOREST', 'GEM', 'WAVE'];
+            const adjective = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+            const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
+            const number = Math.floor(100 + Math.random() * 900);
+            
+            this.nodes.joiningIdInput.value = `${adjective}-${noun}-${number}`;
+            this._validateStep(this.state.currentStep); // Re-validate the entire step
+            this._updateIdStrength();
+            console.log(`Generated new ID: ${this.nodes.joiningIdInput.value}`);
+        }
+        
+        /**
+         * A visual strength meter for the joining ID.
+         * @private
+         */
+        _updateIdStrength() {
+            const value = this.nodes.joiningIdInput.value;
+            let score = 0;
+            if (value.length >= 8) score += 25;
+            if (value.length >= 12) score += 15;
+            if (/[A-Z]/.test(value)) score += 15;
+            if (/[a-z]/.test(value)) score += 15;
+            if (/[0-9]/.test(value)) score += 15;
+            if (/[\W_]/.test(value)) score += 15; // Symbols
+            
+            score = Math.min(score, 100);
+
+            const bar = this.nodes.idStrengthBar;
+            bar.style.width = `${score}%`;
+            bar.setAttribute('aria-valuenow', score);
+            
+            if (score < 40) {
+                bar.className = 'progress-bar bg-danger';
+                this.nodes.idStrengthFeedback.textContent = "Weak. Try adding numbers or symbols.";
+            } else if (score < 75) {
+                bar.className = 'progress-bar bg-warning';
+                this.nodes.idStrengthFeedback.textContent = "Good. More characters would make it stronger.";
+            } else {
+                bar.className = 'progress-bar bg-success';
+                this.nodes.idStrengthFeedback.textContent = "Strong and secure!";
+            }
+        }
+        
+        /**
+         * Copies the Joining ID to the user's clipboard and shows a confirmation toast.
+         * Uses the modern, secure Clipboard API.
+         * @private
+         */
+        async _copyJoiningId() {
+            const joiningId = this.nodes.joiningIdInput.value;
+            if (!joiningId) return;
+            
+            try {
+                await navigator.clipboard.writeText(joiningId);
+                console.log('Text copied to clipboard successfully.');
+                this.nodes.copyToast.classList.add('show');
+                setTimeout(() => {
+                    this.nodes.copyToast.classList.remove('show');
+                }, 2500);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                alert('Could not copy text to clipboard. Please copy it manually.');
+            }
+        }
+        
+        // ==========================================================
+        // SECTION: FORM SUBMISSION & SERVER COMMUNICATION
+        // ==========================================================
+        
+        /**
+         * Handles the final form submission using async/await and the Fetch API.
+         * @param {Event} e The form submission event.
+         * @private
+         */
+        async _handleFormSubmit(e) {
+            e.preventDefault();
+            this._setLoadingState(true);
+
+            // Hide previous server errors
+            this.nodes.formErrorAlert.classList.add('d-none');
+            this.nodes.formErrorAlert.textContent = '';
+            
+            const formData = new FormData(this.form);
+            const actionUrl = this.form.action || window.location.href; // Failsafe
+            
+            console.log(`Submitting form to: ${actionUrl}`);
+
+            try {
+                const response = await fetch(actionUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                        'X-Requested-With': 'XMLHttpRequest' // Standard for AJAX in Django
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    console.log('Server response OK. Redirecting...', data.redirect_url);
+                    window.location.href = data.redirect_url;
+                } else {
+                    // Handle server-side validation errors (e.g., ID taken)
+                    console.warn('Server responded with an error:', data);
+                    if (data.errors) {
+                        this._displayServerErrors(data.errors);
+                    } else {
+                         // Generic error if the `errors` object is missing
+                         this.nodes.formErrorAlert.textContent = data.detail || 'An unexpected server error occurred. Please try again.';
+                         this.nodes.formErrorAlert.classList.remove('d-none');
+                    }
+                    this._setLoadingState(false);
+                }
+            } catch (error) {
+                console.error('Network or submission fetch failed:', error);
+                this.nodes.formErrorAlert.textContent = 'A network error occurred. Please check your connection and try again.';
+                this.nodes.formErrorAlert.classList.remove('d-none');
+                this._setLoadingState(false);
+            }
+        }
+        
+        /**
+         * Displays validation errors returned from the server on the correct fields.
+         * @param {object} errors An object where keys are field names and values are error messages.
+         * @private
+         */
+        _displayServerErrors(errors) {
+            for (const [field, message] of Object.entries(errors)) {
+                const input = this.form.querySelector(`[name="${field}"]`);
+                if (input) {
+                    // Display error on the specific field
+                    const errorElement = document.getElementById(`${input.id}Error`);
+                    if(errorElement) {
+                       input.classList.add('is-invalid');
+                       errorElement.textContent = Array.isArray(message) ? message[0] : message;
+                    }
+                } else if (field === '__all__') {
+                    // For non-field errors (e.g., "Login required"), show in the global alert
+                    this.nodes.formErrorAlert.innerHTML += `${message}<br>`;
+                    this.nodes.formErrorAlert.classList.remove('d-none');
+                }
+            }
+            
+            // Automatically jump back to the first step that contains an error
+            const firstErrorInput = this.form.querySelector('.is-invalid');
+            if (firstErrorInput) {
+                const stepElement = firstErrorInput.closest('.wizard-step');
+                if (stepElement) {
+                    const stepId = parseInt(stepElement.id.replace('step', ''));
+                    this._navigateToStep(stepId);
+                    console.log(`Automatically navigated to step ${stepId} due to server error.`);
+                }
+            }
+        }
+        
+        /**
+         * Toggles the loading state of the submit button.
+         * @param {boolean} isLoading True to show loading, false to hide.
+         * @private
+         */
+        _setLoadingState(isLoading) {
+            const buttonText = this.nodes.submitBtn.querySelector('.button-text');
+            const spinner = this.nodes.submitBtn.querySelector('.spinner-border');
+            if (isLoading) {
+                this.nodes.submitBtn.disabled = true;
+                buttonText.textContent = 'Creating...';
+                spinner.style.display = 'inline-block';
+            } else {
+                this.nodes.submitBtn.disabled = false;
+                buttonText.textContent = 'Create Family & Proceed';
+                spinner.style.display = 'none';
+            }
+        }
+    }
+
+    // ----- KICK IT OFF! -----
+    // Create a new instance of the wizard, which starts the whole process.
+    new FormWizard('creationForm');
+
+}); // End DOMContentLoaded
+</script>
+{% endblock %}

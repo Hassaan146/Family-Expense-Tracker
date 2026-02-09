@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Family Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6 col-xl-5">
+            <!-- Glassmorphism Card with Fade-in Animation -->
+            <div class="card card-glassmorphism shadow-lg animated-fade-in">
+                <div class="card-body p-4 p-md-5">
+                    
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold mb-2 text-white"><i class="fas fa-sign-in-alt me-2"></i>Welcome Back</h2>
+                        <p class="text-white-75 mb-4">Log in to continue to your dashboard.</p>
+                    </div>
+
+                    <form method="POST" id="loginForm">
+                        {% csrf_token %}
+                        
+                        <!-- Username -->
+                        <div class="mb-3">
+                            <label for="username" class="form-label"><i class="fas fa-user me-2"></i>Username</label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   placeholder="Enter your username" required>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="mb-4">
+                            <label for="password" class="form-label"><i class="fas fa-lock me-2"></i>Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       placeholder="Enter your password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Login Button with Loading Spinner -->
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold" id="loginBtn" disabled>
+                                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                                <span class="text">Login</span>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr class="my-4" style="border-color: rgba(255,255,255,0.3);">
+
+                    <!-- Register Link -->
+                    <div class="text-center">
+                        <p class="mb-0 text-white-75">Don't have an account? 
+                            <a href="{% url 'register' %}" class="text-white fw-bold text-decoration-none">Sign Up</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM ELEMENT SELECTORS ---
+    const loginForm = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    // --- VALIDATION LOGIC ---
+    const validateForm = () => {
+        const isUsernameValid = usernameInput.value.trim() !== '';
+        const isPasswordValid = passwordInput.value.trim() !== '';
+        
+        if (isUsernameValid && isPasswordValid) {
+            loginBtn.disabled = false;
+        } else {
+            loginBtn.disabled = true;
+        }
+    };
+
+    // --- EVENT LISTENERS ---
+    usernameInput.addEventListener('input', validateForm);
+    passwordInput.addEventListener('input', validateForm);
+
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const icon = this.querySelector('i');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    });
+    
+    loginForm.addEventListener('submit', () => {
+        // Show loading state on the button
+        const btnText = loginBtn.querySelector('.text');
+        const btnSpinner = loginBtn.querySelector('.spinner-border');
+        
+        btnText.textContent = 'Logging In...';
+        btnSpinner.classList.remove('d-none');
+        loginBtn.disabled = true; // Disable to prevent double submission
+    });
+});
+</script>
+
+<style>
+    /* Animated Gradient Background */
+    body {
+        background: linear-gradient(-45deg, #3a55da, #7f5a83, #0d324d, #7f5a83);
+        background-size: 400% 400%;
+        animation: gradientBG 20s ease infinite;
+    }
+
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Glassmorphism Card Effect */
+    .card-glassmorphism {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px); /* For Safari */
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 1rem;
+    }
+
+    /* Fade-in Animation */
+    .animated-fade-in {
+        animation: fadeIn 0.8s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(25px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Form Elements Styling for Glassmorphism */
+    .form-label {
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.85);
+    }
+    .form-control {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    .form-control:focus {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: #f8f9fa;
+        box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25);
+        color: #fff;
+    }
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+        opacity: 1;
+    }
+    .input-group .btn {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    .text-white-75 {
+        color: rgba(255,255,255,0.75)!important;
+    }
+
+    /* Button Styling */
+    .btn-primary {
+        background-color: #3a55da;
+        border-color: #3a55da;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        background-color: #2c43b5;
+        border-color: #2c43b5;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .btn-primary:disabled {
+        background-color: #5a6268;
+        border-color: #5a6268;
+        cursor: not-allowed;
+        transform: none;
+        opacity: 0.65;
+    }
+</style>
+{% endblock %}

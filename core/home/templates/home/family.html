@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Family Hub - Family Expense Tracker{% endblock %}
+
+<!-- ======================================================================================= -->
+<!--                                                                                         -->
+<!--                       INLINE CSS FOR A PREMIUM SERVER-SIDE UI                           -->
+<!--                                                                                         -->
+<!--  This CSS is designed to enhance a traditional, server-rendered page. It adds premium   -->
+<!--  styling, animations, and responsive design, making page reloads feel intentional.      -->
+<!--                                                                                         -->
+<!-- ======================================================================================= -->
+{% block styles %}
+<style>
+    /* -------------------------------------------------------------------------- */
+    /*          [1] THEME & LAYOUT FOUNDATION                                     */
+    /* -------------------------------------------------------------------------- */
+    :root {
+        --primary-color: #0d6efd;
+        --primary-gradient: linear-gradient(135deg, #0d6efd, #0dcaf0);
+        --success-color: #198754;
+        --warning-color: #f59e0b;
+        --light-bg: #f8f9fa;
+        --white: #ffffff;
+        --dark-text: #212529;
+        --medium-text: #495057;
+        --light-text: #6c757d;
+        --border-color: #dee2e6;
+        --card-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+        --card-shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+        --card-radius: 12px;
+        --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+        font-family: var(--font-family);
+        background-color: var(--light-bg);
+    }
+    
+    .content-container { max-width: 1200px; margin: 2rem auto; }
+    
+    /* Keyframes for animations */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes popIn { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* -------------------------------------------------------------------------- */
+    /*          [2] HEADER & SEARCH CARD STYLING                                  */
+    /* -------------------------------------------------------------------------- */
+    .dashboard-header {
+        animation: slideUp 0.5s ease-out;
+    }
+
+    .search-card {
+        background: var(--white);
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+        padding: 2rem;
+        transition: box-shadow 0.3s ease;
+    }
+
+    .search-card .form-control {
+        padding: 0.9rem 1.2rem;
+        font-size: 1.1rem;
+        border-width: 2px;
+    }
+    
+    .search-card .btn {
+        padding: 0.9rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    /* Spinner for search button click feedback */
+    .spinner-border-sm {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*          [3] RESULTS AREA & STYLISH EMPTY STATE                            */
+    /* -------------------------------------------------------------------------- */
+    #results-area {
+        margin-top: 2.5rem;
+        animation: fadeIn 0.8s 0.2s ease-out forwards;
+        opacity: 0; /* Start hidden for animation */
+    }
+
+    .empty-state-panel {
+        text-align: center;
+        padding: 4rem 2rem;
+        border-radius: var(--card-radius);
+        background-color: var(--white);
+        border: 1px dashed var(--border-color);
+        animation: popIn 0.5s ease-out;
+    }
+    .empty-state-panel .icon {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+    }
+    .empty-state-panel h4 {
+        color: var(--dark-text);
+        font-weight: 600;
+    }
+    .empty-state-panel p {
+        color: var(--light-text);
+        max-width: 450px;
+        margin: 0.5rem auto 1.5rem;
+    }
+    .empty-state-panel code { /* For showing the searched term */
+        background-color: #ffe5e5;
+        padding: 0.2em 0.5em;
+        border-radius: 6px;
+        color: #b91c1c;
+        font-weight: 700;
+        font-size: 1.1em;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*          [4] PREMIUM MEMBER CARD DESIGN                                    */
+    /* -------------------------------------------------------------------------- */
+    #member-cards-container .col-md-6 {
+        /* This applies the staggered animation */
+        animation: slideUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+    .member-card {
+        height: 100%;
+        background: var(--white);
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+    .member-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--card-shadow-hover);
+        border-color: var(--primary-color);
+    }
+    
+    .member-card-header {
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .avatar-circle {
+        width: 50px;
+        height: 50px;
+        min-width: 50px; /* Prevents shrinking */
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background: var(--primary-gradient);
+        color: var(--white);
+    }
+    
+    /* Differentiate the Owner card */
+    .is-owner .avatar-circle {
+        background: linear-gradient(135deg, var(--warning-color), #ffc107);
+    }
+
+    .member-info h5 {
+        margin: 0;
+        font-weight: 700;
+        color: var(--dark-text);
+        line-height: 1.2;
+    }
+    .member-info .family-name {
+        color: var(--light-text);
+        font-size: 0.9rem;
+    }
+
+    .member-card .card-body { 
+        padding: 20px; 
+        flex-grow: 1; 
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .stat-item { text-align: center; }
+    .stat-item .label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--light-text);
+    }
+    .stat-item .value { font-weight: 700; color: var(--dark-text); font-size: 1.25rem; }
+
+    .owner-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #b45309;
+        font-weight: 600;
+        padding: 5px 12px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container content-container">
+    <div class="dashboard-header d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <h2 class="text-primary fw-bold mb-0">
+            <i class="fas fa-search-location me-2"></i>Family Hub
+        </h2>
+        <a href="{% url 'create_family' %}" class="btn btn-success shadow-sm">
+            <i class="fas fa-plus me-2"></i>Create New Family
+        </a>
+    </div>
+
+    <!-- ========================================================= -->
+    <!--  I. THE SEARCH COMPONENT                                  -->
+    <!--  This is always visible and provides user feedback on click. -->
+    <!-- ========================================================= -->
+    <div class="card search-card">
+        <div class="card-body">
+            <h5 class="card-title fw-bold">
+                <i class="fas fa-search me-2 text-primary"></i>Find a Family Group
+            </h5>
+            <p class="card-subtitle mb-3 text-muted">Enter a family's unique Joining ID to view its members.</p>
+            <form id="search-form" method="POST" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-9">
+                    <label for="family_name_input" class="form-label visually-hidden">Family Name</label>
+                    <input type="text" class="form-control form-control-lg" id="family_name_input" name="family_name" placeholder="Enter family joining ID..." required value="{{ request.POST.family_name|default:'' }}">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" id="search-button" class="btn btn-primary btn-lg w-100">
+                        <span class="button-text"><i class="fas fa-search"></i> Search</span>
+                        <span class="spinner-border spinner-border-sm button-spinner" role="status" aria-hidden="true" style="display: none;"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!--  II. THE RESULTS AREA                                     -->
+    <!--  This section's content is determined by the Django view. -->
+    <!-- ========================================================= -->
+    <div id="results-area" class="mt-4">
+        {% if family %}
+            <!-- ~~~~~~~~ SUCCESS STATE: FAMILY FOUND ~~~~~~~~ -->
+            <div class="results-header text-center mb-4">
+                <h3 class="fw-bold">Showing Members of "{{ family.0.family_name }}"</h3>
+            </div>
+            <div id="member-cards-container" class="row g-4">
+                {% for member in family %}
+                    <!-- The animation delay is staggered using the loop counter -->
+                    <div class="col-md-6 col-lg-4" style="animation-delay: {{ forloop.counter }}ms;">
+                        <!-- The 'is-owner' class on the card helps with styling -->
+                        <div class="member-card {% if member.is_owner %}is-owner{% endif %}">
+                            <div class="member-card-header">
+                                <div class="avatar-circle">
+                                    <!-- Dynamic initial based on name, fallback to user icon -->
+                                    <span class="fw-bold">{{ member.member_name|first|upper }}</span>
+                                </div>
+                                <div class="member-info">
+                                    <h5 class="mb-0">{{ member.member_name }}</h5>
+                                    <small class="family-name text-muted">{{ member.family_name }}</small>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="label">Age</div>
+                                        <div class="value">{{ member.member_age }}</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="label">Gender</div>
+                                        <div class="value">{{ member.member_gender }}</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    {% if member.is_owner %}
+                                        <div class="text-center">
+                                            <span class="owner-badge">
+                                                <i class="fas fa-crown"></i> Family Owner
+                                            </span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+        {% elif request.method == "POST" %}
+            <!-- ~~~~~~~~ EMPTY STATE: NO FAMILY FOUND (after a search) ~~~~~~~~ -->
+            <div class="empty-state-panel">
+                <div class="icon text-primary"><i class="fas fa-question-circle"></i></div>
+                <h4 class="fw-bold">No Family Found</h4>
+                <!-- ⭐ This is the key improvement: tell the user WHAT they searched for -->
+                <p>We couldn't find a family with the Joining ID: <code>{{ request.POST.family_name }}</code>. Please check for typos and try again.</p>
+                <a href="{% url 'create_family' %}" class="btn btn-success mt-2">
+                    <i class="fas fa-plus me-2"></i>Or Create a New Family
+                </a>
+            </div>
+
+        {% else %}
+             <!-- ~~~~~~~~ PRISTINE STATE: NO SEARCH PERFORMED YET ~~~~~~~~ -->
+             <div class="empty-state-panel">
+                <div class="icon text-muted"><i class="fas fa-binoculars"></i></div>
+                <h4 class="fw-bold">Ready to Find Your Group?</h4>
+                <p>Use the search bar above to look up your family group by its unique Joining ID. Once found, all members will be displayed here beautifully.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- ========================================================= -->
+<!--  III. INLINE JAVASCRIPT FOR UI FEEDBACK                   -->
+<!--  This small script provides instant feedback on user actions -->
+<!--  without changing the server-side logic.                     -->
+<!-- ========================================================= -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchForm = document.getElementById('search-form');
+    const searchButton = document.getElementById('search-button');
+    const buttonText = searchButton.querySelector('.button-text');
+    const buttonSpinner = searchButton.querySelector('.button-spinner');
+
+    if (searchForm) {
+        // This is the core UX improvement: add a loading state on submit.
+        searchForm.addEventListener('submit', function() {
+            // Check for client-side validity first.
+            if (!searchForm.checkValidity()) {
+                return;
+            }
+
+            // Disable the button to prevent multiple submissions.
+            searchButton.disabled = true;
+
+            // Show the spinner and change the text.
+            // This provides immediate visual feedback that the action was successful
+            // and the page is now loading the next state from the server.
+            buttonText.textContent = 'Searching...';
+            buttonSpinner.style.display = 'inline-block';
+        });
+    }
+
+});
+</script>
+{% endblock %}

@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+
+{% block title %}Join a Family - Family Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- =============================================== -->
+    <!-- HERO SECTION -->
+    <!-- =============================================== -->
+    <div class="text-center mb-5 animated-fade-in">
+        <i class="fas fa-link fa-3x text-primary mb-3"></i>
+        <h1 class="display-4 fw-bold">Join Your Family</h1>
+        <p class="lead text-muted col-lg-8 mx-auto">
+            You're one step away from connecting with your family's shared finances. Enter the unique Joining ID provided by your family's owner to get started.
+        </p>
+    </div>
+
+    <div class="row g-5 justify-content-center">
+        <!-- =============================================== -->
+        <!-- LEFT COLUMN: THE MAIN FORM -->
+        <!-- =============================================== -->
+        <div class="col-lg-7">
+            <div class="card shadow-lg main-form-card animated-slide-in-up">
+                <div class="card-body p-4 p-md-5">
+                    <h4 class="card-title text-center mb-2">Enter Your Family's Joining ID</h4>
+                    <p class="text-center text-muted mb-4">The ID is a 6-character code.</p>
+
+                    <!-- Display Django Messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %} d-flex align-items-center" role="alert">
+                                <i class="fas {% if message.tags == 'error' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} me-2"></i>
+                                <div>{{ message }}</div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="POST" id="joinForm" novalidate>
+                        {% csrf_token %}
+                        <!-- Hidden input to store the combined code for submission -->
+                        <input type="hidden" name="joining_id" id="hidden_joining_id">
+                        
+                        <!-- Interactive Pincode-style Input -->
+                        <div id="pincode-input-container" class="d-flex justify-content-center gap-2 gap-sm-3 my-4">
+                            <input type="text" class="form-control pincode-input text-center" maxlength="1" required aria-label="First character of joining ID">
+                            <input type="text" class="form-control pincode-input text-center" maxlength="1" required aria-label="Second character of joining ID">
+                            <input type="text" class="form-control pincode-input text-center" maxlength="1" required aria-label="Third character of joining ID">
+                            <input type="text" class="form-control pincode-input text-center" maxlength="1" required aria-label="Fourth character of joining ID">
+                            <input type="text" class="form-control pincode-input text-center" maxlength="1" required aria-label="Fifth character of joining ID">
+                            <input type="text" class="form-control pincode-input text-center" maxlength="1" required aria-label="Sixth character of joining ID">
+                        </div>
+                        
+                        <!-- Submit Button with Loading Spinner -->
+                        <div class="d-grid">
+                            <button type="submit" id="joinBtn" class="btn btn-primary btn-lg fw-bold" disabled>
+                                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                                <i class="fas fa-door-open me-2 icon"></i>
+                                <span class="text">Join Family</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- =============================================== -->
+        <!-- RIGHT COLUMN: HELP & INFORMATION -->
+        <!-- =============================================== -->
+        <div class="col-lg-5">
+            <!-- "How It Works" Card -->
+            <div class="card shadow-sm mb-4 info-card animated-slide-in-up" style="animation-delay: 0.1s;">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-3"><i class="fas fa-question-circle me-2 text-primary"></i>How It Works</h5>
+                    <ul class="list-unstyled">
+                        <li class="d-flex align-items-start mb-3">
+                            <div class="step-icon"><i class="fas fa-key"></i></div>
+                            <div class="ms-3">
+                                <h6 class="mb-0">1. Get the ID</h6>
+                                <p class="text-muted small mb-0">Ask the owner of your family group to share the 6-character Joining ID with you.</p>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-start mb-3">
+                            <div class="step-icon"><i class="fas fa-keyboard"></i></div>
+                            <div class="ms-3">
+                                <h6 class="mb-0">2. Enter it Here</h6>
+                                <p class="text-muted small mb-0">Type or paste the ID into the boxes on the left. The "Join" button will activate when it's complete.</p>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-start">
+                            <div class="step-icon"><i class="fas fa-chart-line"></i></div>
+                            <div class="ms-3">
+                                <h6 class="mb-0">3. Start Tracking</h6>
+                                <p class="text-muted small mb-0">You're all set! You'll be added to the family and can start logging expenses.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- "Need Help?" Card -->
+            <div class="card shadow-sm info-card animated-slide-in-up" style="animation-delay: 0.2s;">
+                <div class="card-body text-center p-4">
+                     <i class="fas fa-life-ring fa-2x text-success mb-3"></i>
+                    <h5 class="card-title">Don't Have an ID?</h5>
+                    <p class="text-muted">If your family hasn't been created yet, you can be the one to start it!</p>
+                    <a href="{% url 'create_family' %}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Create a New Family
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const pincodeContainer = document.getElementById('pincode-input-container');
+    const pincodeInputs = Array.from(pincodeContainer.querySelectorAll('.pincode-input'));
+    const hiddenInput = document.getElementById('hidden_joining_id');
+    const joinBtn = document.getElementById('joinBtn');
+    const joinForm = document.getElementById('joinForm');
+
+    const validateAndCombine = () => {
+        const code = pincodeInputs.map(input => input.value).join('');
+        hiddenInput.value = code.toUpperCase(); // Store as uppercase for consistency
+        
+        // Enable/disable the button based on length
+        if (code.length === 6) {
+            joinBtn.disabled = false;
+        } else {
+            joinBtn.disabled = true;
+        }
+    };
+
+    pincodeInputs.forEach((input, index) => {
+        // --- Auto-focus to next input ---
+        input.addEventListener('input', (e) => {
+            // Force uppercase and allow only letters/numbers
+            input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+            if (input.value && index < pincodeInputs.length - 1) {
+                pincodeInputs[index + 1].focus();
+            }
+            validateAndCombine();
+        });
+
+        // --- Handle backspace ---
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !input.value && index > 0) {
+                pincodeInputs[index - 1].focus();
+            }
+        });
+
+        // --- Handle paste ---
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pasteData = e.clipboardData.getData('text').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            let currentInput = index;
+            for (let i = 0; i < pasteData.length; i++) {
+                if (currentInput < pincodeInputs.length) {
+                    pincodeInputs[currentInput].value = pasteData[i];
+                    if (currentInput < pincodeInputs.length - 1) {
+                        currentInput++;
+                    }
+                }
+            }
+            pincodeInputs[currentInput].focus();
+            validateAndCombine();
+        });
+    });
+
+    // --- Form submission spinner ---
+    joinForm.addEventListener('submit', (e) => {
+        if(joinBtn.disabled) {
+            e.preventDefault();
+            return;
+        }
+        const btnText = joinBtn.querySelector('.text');
+        const btnIcon = joinBtn.querySelector('.icon');
+        const btnSpinner = joinBtn.querySelector('.spinner-border');
+        
+        btnText.textContent = 'Joining...';
+        btnIcon.classList.add('d-none');
+        btnSpinner.classList.remove('d-none');
+        joinBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* New animated background for this specific page */
+    body {
+        background: linear-gradient(-45deg, #f0f3f5, #dbe6f6, #c5d7f2, #b7c7e9);
+        background-size: 400% 400%;
+        animation: gradientBG 25s ease infinite;
+    }
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Animation Styles */
+    .animated-fade-in { animation: fadeIn 0.8s ease-in-out; }
+    .animated-slide-in-up { animation: slideInUp 0.8s ease-in-out forwards; }
+    @keyframes fadeIn {
+        from { opacity: 0; } to { opacity: 1; }
+    }
+    @keyframes slideInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Main Form Card Styling */
+    .main-form-card {
+        border: none;
+        border-radius: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    /* Pincode Input Styling */
+    .pincode-input {
+        width: 45px;
+        height: 55px;
+        font-size: 1.75rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        border: 2px solid #ced4da;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        -moz-appearance: textfield; /* Firefox */
+    }
+    .pincode-input::-webkit-outer-spin-button,
+    .pincode-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    .pincode-input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        z-index: 2;
+    }
+
+    /* Information Cards Styling */
+    .info-card {
+        border: 1px solid #e9ecef;
+        border-radius: 0.75rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+    }
+    .step-icon {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        background-color: #e7f5ff;
+        color: #0d6efd;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Button Styling */
+    #joinBtn {
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    #joinBtn:not(:disabled):hover {
+        transform: translateY(-2px);
+    }
+    #joinBtn:disabled {
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}

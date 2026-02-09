@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Your Account - Family Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <!-- Main Registration Card with Glassmorphism Effect -->
+            <div class="card card-glassmorphism shadow-lg animated-fade-in">
+                <div class="card-header text-white text-center border-0 pt-4">
+                    <h4 class="mb-0 fw-bold">
+                        <i class="fas fa-user-plus me-2"></i>Create Your Account
+                    </h4>
+                    <p class="mb-0 small">Join us and take control of your finances.</p>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" id="registerForm" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- First Name -->
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">
+                                    <i class="fas fa-user me-2"></i>First Name
+                                </label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       placeholder="Enter your first name" required>
+                                <div class="invalid-feedback">Please enter your first name.</div>
+                            </div>
+
+                            <!-- Last Name -->
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">
+                                    <i class="fas fa-user me-2"></i>Last Name
+                                </label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       placeholder="Enter your last name" required>
+                                <div class="invalid-feedback">Please enter your last name.</div>
+                            </div>
+                        </div>
+
+                        <!-- Username -->
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-at me-2"></i>Username
+                            </label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   placeholder="Choose a unique username" required minlength="4">
+                            <div class="invalid-feedback">Username must be at least 4 characters long.</div>
+                        </div>
+
+                        <!-- Password with Strength Meter -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Password
+                            </label>
+                            <div class="input-group has-validation">
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       placeholder="Create a strong password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <div class="invalid-feedback">Please create a valid password.</div>
+                            </div>
+                            <div class="progress mt-2" style="height: 5px;">
+                                <div id="password-strength-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div id="password-strength-text" class="form-text small"></div>
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="mb-4">
+                            <label for="confirm_password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Confirm Password
+                            </label>
+                            <div class="input-group has-validation">
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                       placeholder="Confirm your password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <div class="invalid-feedback">Passwords do not match.</div>
+                            </div>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="#" class="text-success fw-bold">Terms and Conditions</a>
+                                </label>
+                                <div class="invalid-feedback">You must agree to the terms.</div>
+                            </div>
+                        </div>
+
+                        <!-- Register Button with Loading Spinner -->
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-success btn-lg fw-bold" id="registerBtn" disabled>
+                                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                                <i class="fas fa-user-plus me-2 icon"></i>
+                                <span class="text">Create Account</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Login Link -->
+                    <div class="text-center">
+                        <p class="mb-0 text-white-50">Already have an account?</p>
+                        <a href="{% url 'login' %}" class="btn btn-link text-decoration-none text-success fw-bold">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login Here
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM ELEMENT SELECTORS ---
+    const form = document.getElementById('registerForm');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const strengthBar = document.getElementById('password-strength-bar');
+    const strengthText = document.getElementById('password-strength-text');
+    const registerBtn = document.getElementById('registerBtn');
+    const formInputs = form.querySelectorAll('input[required]');
+
+    // --- UTILITY FUNCTION ---
+    const togglePasswordVisibility = (input, button) => {
+        const icon = button.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    };
+
+    // --- VALIDATION LOGIC ---
+    const checkPasswordStrength = () => {
+        const password = passwordInput.value;
+        let score = 0;
+        if (password.length >= 8) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/[a-z]/.test(password)) score++;
+        if (/[0-9]/.test(password)) score++;
+        if (/[^A-Za-z0-9]/.test(password)) score++;
+
+        const strengthMap = {
+            0: { width: '0%', class: '', text: '' },
+            1: { width: '20%', class: 'bg-danger', text: 'Very Weak' },
+            2: { width: '40%', class: 'bg-danger', text: 'Weak' },
+            3: { width: '60%', class: 'bg-warning', text: 'Medium' },
+            4: { width: '80%', class: 'bg-success', text: 'Strong' },
+            5: { width: '100%', class: 'bg-success', text: 'Very Strong' },
+        };
+        
+        const { width, class: newClass, text } = strengthMap[score];
+        strengthBar.style.width = width;
+        strengthBar.className = `progress-bar ${newClass} transition-all duration-300`;
+        strengthText.textContent = text;
+        strengthText.className = `form-text small ${newClass.replace('bg-', 'text-')}`;
+        return score >= 3; // Password is valid if medium or stronger
+    };
+    
+    const validateSingleInput = (input) => {
+        // Handle password confirmation separately
+        if (input.id === 'confirm_password') {
+            const match = passwordInput.value === input.value && input.value.length > 0;
+            input.classList.toggle('is-valid', match);
+            input.classList.toggle('is-invalid', !match && input.value.length > 0);
+            return match;
+        }
+
+        // Handle checkbox
+        if (input.type === 'checkbox') {
+             const isValid = input.checked;
+             input.classList.toggle('is-valid', isValid);
+             input.classList.toggle('is-invalid', !isValid);
+             return isValid;
+        }
+        
+        // Handle password strength
+        if (input.id === 'password') {
+            const isStrong = checkPasswordStrength();
+            input.classList.toggle('is-valid', isStrong);
+            input.classList.toggle('is-invalid', !isStrong && input.value.length > 0);
+            return isStrong;
+        }
+
+        // Handle other text inputs
+        const isValid = input.checkValidity();
+        input.classList.toggle('is-valid', isValid);
+        input.classList.toggle('is-invalid', !isValid);
+        return isValid;
+    };
+
+
+    const validateForm = () => {
+        let isFormValid = true;
+        formInputs.forEach(input => {
+            if (!validateSingleInput(input)) {
+                isFormValid = false;
+            }
+        });
+        
+        // Final check for password match, which isn't a native validity check
+        if (passwordInput.value !== confirmPasswordInput.value) {
+            isFormValid = false;
+        }
+
+        registerBtn.disabled = !isFormValid;
+    };
+
+    // --- EVENT LISTENERS ---
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        togglePasswordVisibility(passwordInput, this);
+    });
+
+    document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+        togglePasswordVisibility(confirmPasswordInput, this);
+    });
+    
+    // Add event listeners to all required inputs
+    formInputs.forEach(input => {
+        input.addEventListener('input', () => {
+            validateSingleInput(input); // Validate this field
+            // Re-validate confirm_password whenever password changes
+            if (input.id === 'password') {
+                validateSingleInput(confirmPasswordInput);
+            }
+            validateForm(); // Check the whole form state
+        });
+    });
+
+    form.addEventListener('submit', (e) => {
+        // Double-check validation before submission
+        validateForm();
+        if (registerBtn.disabled) {
+            e.preventDefault();
+            return;
+        }
+
+        // Show loading state on the button
+        const btnText = registerBtn.querySelector('.text');
+        const btnIcon = registerBtn.querySelector('.icon');
+        const btnSpinner = registerBtn.querySelector('.spinner-border');
+        
+        btnText.textContent = 'Creating...';
+        btnIcon.classList.add('d-none');
+        btnSpinner.classList.remove('d-none');
+        registerBtn.disabled = true; // Disable to prevent double submission
+    });
+});
+</script>
+
+<style>
+    /* Animated Gradient Background */
+    body {
+        background: linear-gradient(-45deg, #1d976c, #93f9b9, #23a6d5, #23d5ab);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+    }
+
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Glassmorphism Card Effect */
+    .card-glassmorphism {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px); /* For Safari */
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .card-glassmorphism:hover {
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37) !important;
+    }
+
+    /* Fade-in Animation */
+    .animated-fade-in {
+        animation: fadeIn 0.8s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Form Elements Styling for Glassmorphism */
+    .form-label {
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    .form-control {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #fff;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    .form-control:focus {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: #93f9b9;
+        box-shadow: 0 0 0 0.25rem rgba(147, 249, 185, 0.4);
+        color: #fff;
+    }
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+        opacity: 1;
+    }
+    .input-group .btn {
+        z-index: 5; /* Ensure eye icon is clickable */
+        color: rgba(255, 255, 255, 0.7);
+    }
+    .input-group .btn:hover {
+        color: #fff;
+    }
+
+    /* Custom Bootstrap Validation Styles */
+    .form-control.is-invalid, .form-control.is-valid {
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    .invalid-feedback {
+        color: #ffc4c9;
+        font-weight: 500;
+    }
+
+    .form-text { color: rgba(255, 255, 255, 0.7) !important; }
+    .form-check-label { color: rgba(255, 255, 255, 0.9); }
+    .form-check-input:checked {
+        background-color: #198754;
+        border-color: #198754;
+    }
+    .text-success { color: #93f9b9 !important; }
+
+    /* Button Styling */
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+        transition: all 0.3s ease;
+    }
+    .btn-success:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+        transform: translateY(-2px);
+    }
+    .btn-success:disabled {
+        background-color: #5a6268;
+        border-color: #5a6268;
+        cursor: not-allowed;
+        transform: none;
+        opacity: 0.65;
+    }
+</style>
+{% endblock %}
